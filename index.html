@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a3d27">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="30K$">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>30K$</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#0a3d27;--bg2:#06281a;--cell:#2e9e5b;--cell2:#237d48;--edge:#7fd69f;--done:#0d2e1f;--gold:#e4c35a;--txt:#eafaf0}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;min-height:100%;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px;max-width:520px;margin-inline:auto}
+h1{font-size:30px;margin:0 0 2px;color:var(--gold);letter-spacing:1px}
+.sub{font-size:13px;opacity:.75;margin-bottom:12px}
+.bar{height:12px;background:var(--bg2);border:1px solid var(--edge);border-radius:8px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),#f3dd8a);transition:width .25s}
+.stats{display:flex;justify-content:space-between;font-size:15px;font-weight:600;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.c{aspect-ratio:1;border:1px solid var(--edge);background:linear-gradient(145deg,var(--cell),var(--cell2));color:var(--txt);border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;padding:0;box-shadow:inset 0 0 0 2px rgba(255,255,255,.12)}
+.c.on{background:var(--done);color:var(--gold);border-color:var(--gold);text-decoration:line-through;opacity:.85;box-shadow:none}
+button.r{margin-top:14px;background:none;border:1px solid var(--edge);color:var(--txt);border-radius:8px;padding:8px 14px;font-size:14px}
+</style>
+</head>
+<body>
+<h1>30K$</h1>
+<div class="sub">57 steps. Tap a number when you save it.</div>
+<div class="bar"><i id="b"></i></div>
+<div class="stats"><span id="s">$0</span><span id="n">0 / 57</span><span>$30,000</span></div>
+<div class="grid" id="g"></div>
+<button class="r" id="r">Reset all</button>
+<script>
+var vals=[];
+[[300,20],[500,20],[700,10],[1000,7]].forEach(function(p){for(var i=0;i<p[1];i++)vals.push(p[0])});
+var seed=7;function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+for(var i=vals.length-1;i>0;i--){var j=Math.floor(rnd()*(i+1));var t=vals[i];vals[i]=vals[j];vals[j]=t}
+var KEY="grid30k",on={};
+try{on=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){on={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(on))}catch(e){}}
+var g=document.getElementById("g");
+function render(){
+  g.innerHTML="";var sum=0,cnt=0;
+  vals.forEach(function(v,i){
+    var b=document.createElement("button");b.className="c"+(on[i]?" on":"");b.textContent=v;
+    if(on[i]){sum+=v;cnt++}
+    b.onclick=function(){if(on[i])delete on[i];else on[i]=1;save();render()};
+    g.appendChild(b);
+  });
+  document.getElementById("s").textContent="$"+sum.toLocaleString("en-US");
+  document.getElementById("n").textContent=cnt+" / 57";
+  document.getElementById("b").style.width=(sum/300)+"%";
+}
+var rb=document.getElementById("r"),armed=false,tm;
+rb.onclick=function(){
+  if(!armed){armed=true;rb.textContent="Sure? Tap again";tm=setTimeout(function(){armed=false;rb.textContent="Reset all"},3000);return}
+  clearTimeout(tm);armed=false;rb.textContent="Reset all";on={};save();render();
+};
+render();
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+</script>
+</body>
+</html>
