@@ -1,18 +1,17 @@
-const CACHE = "30k-pwa-v4";
+const CACHE = "30k-pwa-final-v1";
 
 const FILES = [
   "/30K/",
   "/30K/index.html",
-  "/30K/manifest.json",
-  "/30K/icon-192.png",
-  "/30K/icon-512.png"
+  "/30K/manifest.json"
 ];
 
 self.addEventListener("install", event => {
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(FILES))
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
@@ -23,17 +22,24 @@ self.addEventListener("activate", event => {
           .filter(key => key !== CACHE)
           .map(key => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request);
-    })
+    fetch(event.request)
+      .then(response => {
+        const copy = response.clone();
+
+        caches.open(CACHE).then(cache => {
+          cache.put(event.request, copy);
+        });
+
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
